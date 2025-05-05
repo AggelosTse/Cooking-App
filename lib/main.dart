@@ -47,7 +47,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       time: '20 min',
       difficulty: 3,
       description:
-          'Spaghetti alla Carbonara is a traditional Roman pasta dish known for its creamy texture without the use of cream. Made with eggs, Pecorino Romano cheese, guanciale (cured pork cheek), and black pepper, its flavor is rich, savory, and umami-forward. The dish showcases the emulsifying power of egg and cheese when combined with hot pasta water. High in protein and fat, it’s considered indulgent and best served fresh. Often enjoyed as a main course in Italy, it reflects minimalistic yet powerful Italian cooking principles.',
+          'Spaghetti alla Carbonara is a traditional Roman pasta dish known for its creamy texture without the use of cream. Made with eggs, Pecorino Romano cheese, guanciale (cured pork cheek), and black pepper...',
     ),
     Recipe(
       imagePath: 'assets/pancakes.jpg',
@@ -55,7 +55,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       time: '15 min',
       difficulty: 2,
       description:
-          'Pancakes are a classic North American breakfast food made from a batter of flour, eggs, milk, and a leavening agent like baking powder. The result is a soft, fluffy interior with a slightly crisp edge when pan-fried. Their neutral flavor makes them ideal for sweet toppings like maple syrup, fruit, or chocolate. Pancakes are carbohydrate-rich and offer quick energy. Versatile and customizable, they represent comfort food culture and are often adapted into savory forms in global cuisines.',
+          'Pancakes are a classic North American breakfast food made from flour, eggs, and milk, resulting in a soft and fluffy dish...',
     ),
     Recipe(
       imagePath: 'assets/steak.jpg',
@@ -63,7 +63,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       time: '30 min',
       difficulty: 4,
       description:
-          'Steak refers to a thick cut of beef, typically from prime sections like the rib, loin, or sirloin. When grilled or pan-seared properly, it develops a Maillard-crusted exterior while retaining a juicy, tender center. The flavor is intensely beefy, slightly metallic due to iron content, and varies with fat marbling. A good steak balances tenderness, juiciness, and depth of flavor. It is protein-rich, iron-dense, and often served with sauces, vegetables, or starches to complement its richness.',
+          'Steak is a thick slice of beef typically grilled or pan-seared to create a Maillard crust while maintaining tenderness inside...',
     ),
   ];
 
@@ -82,6 +82,21 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  void addNewRecipe(Recipe recipe) {
+    setState(() {
+      recipes.add(recipe);
+    });
+  }
+
+  void openAddRecipePage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddRecipePage(onAdd: addNewRecipe),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,64 +107,84 @@ class _ImageScrollerState extends State<ImageScroller> {
           height: 260,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: recipes.length,
+            itemCount: recipes.length + 1,
             itemBuilder: (context, index) {
-              final recipe = recipes[index];
-              return Container(
-                width: 180,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () => openDetailPage(recipe),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          recipe.imagePath,
-                          width: 180,
-                          height: 110,
-                          fit: BoxFit.cover,
+              if (index < recipes.length) {
+                final recipe = recipes[index];
+                return Container(
+                  width: 180,
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => openDetailPage(recipe),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            recipe.imagePath,
+                            width: 180,
+                            height: 110,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      recipe.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 6),
+                      Text(
+                        recipe.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Time: ${recipe.time}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
+                      Text(
+                        'Time: ${recipe.time}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: List.generate(5, (starIndex) {
-                        return GestureDetector(
-                          onTap: () => updateDifficulty(index, starIndex + 1),
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 2.0),
-                            child: Icon(
-                              starIndex < recipe.difficulty
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              color: Colors.amber,
-                              size: 20,
+                      const SizedBox(height: 4),
+                      Row(
+                        children: List.generate(5, (starIndex) {
+                          return GestureDetector(
+                            onTap: () =>
+                                updateDifficulty(index, starIndex + 1),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2.0),
+                              child: Icon(
+                                starIndex < recipe.difficulty
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                // + Button
+                return GestureDetector(
+                  onTap: openAddRecipePage,
+                  child: Container(
+                    width: 180,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey),
                     ),
-                  ],
-                ),
-              );
+                    child: const Center(
+                      child: Icon(Icons.add, size: 40, color: Colors.black54),
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ),
@@ -197,6 +232,88 @@ class RecipeDetailPage extends StatelessWidget {
               style: const TextStyle(fontSize: 16),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddRecipePage extends StatefulWidget {
+  final Function(Recipe) onAdd;
+
+  const AddRecipePage({super.key, required this.onAdd});
+
+  @override
+  State<AddRecipePage> createState() => _AddRecipePageState();
+}
+
+class _AddRecipePageState extends State<AddRecipePage> {
+  final _formKey = GlobalKey<FormState>();
+  String title = '';
+  String time = '';
+  String description = '';
+  int difficulty = 0;
+
+  // Fake image path for demonstration
+  String imagePath = 'assets/placeholder.jpg';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Add New Recipe")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Title'),
+                onSaved: (val) => title = val ?? '',
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Time (e.g. 20 min)'),
+                onSaved: (val) => time = val ?? '',
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Description'),
+                maxLines: 4,
+                onSaved: (val) => description = val ?? '',
+              ),
+              const SizedBox(height: 12),
+              const Text("Difficulty:"),
+              Row(
+                children: List.generate(5, (index) {
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      difficulty = index + 1;
+                    }),
+                    child: Icon(
+                      index < difficulty ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  _formKey.currentState?.save();
+                  widget.onAdd(
+                    Recipe(
+                      imagePath: imagePath,
+                      title: title,
+                      time: time,
+                      description: description,
+                      difficulty: difficulty,
+                    ),
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text("Add Recipe"),
+              )
+            ],
+          ),
         ),
       ),
     );
