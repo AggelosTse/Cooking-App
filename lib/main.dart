@@ -33,6 +33,7 @@ class Recipe {
   final String time;
   final String description;
   int difficulty;
+  String difficultyLevel;
 
   Recipe({
     required this.imagePath,
@@ -40,6 +41,7 @@ class Recipe {
     required this.time,
     required this.description,
     this.difficulty = 0,
+    this.difficultyLevel = 'Medium',
   });
 }
 
@@ -57,24 +59,24 @@ class _ImageScrollerState extends State<ImageScroller> {
       title: 'Carbonara',
       time: '20 min',
       difficulty: 3,
-      description:
-          'Spaghetti alla Carbonara is a traditional Roman pasta dish known for its creamy texture without the use of cream. Made with eggs, Pecorino Romano cheese, guanciale (cured pork cheek), and black pepper...',
+      difficultyLevel: 'Medium',
+      description: 'Spaghetti alla Carbonara is a traditional Roman pasta dish...',
     ),
     Recipe(
       imagePath: 'assets/pancakes.jpg',
       title: 'Pancakes',
       time: '15 min',
       difficulty: 2,
-      description:
-          'Pancakes are a classic North American breakfast food made from flour, eggs, and milk, resulting in a soft and fluffy dish...',
+      difficultyLevel: 'Easy',
+      description: 'Pancakes are a classic North American breakfast food...',
     ),
     Recipe(
       imagePath: 'assets/steak.jpg',
       title: 'Steak',
       time: '30 min',
       difficulty: 4,
-      description:
-          'Steak is a thick slice of beef typically grilled or pan-seared to create a Maillard crust while maintaining tenderness inside...',
+      difficultyLevel: 'Hard',
+      description: 'Steak is a thick slice of beef typically grilled or pan-seared...',
     ),
   ];
 
@@ -194,6 +196,13 @@ class _ImageScrollerState extends State<ImageScroller> {
                           color: Colors.grey,
                         ),
                       ),
+                      Text(
+                        'Difficulty: ${recipe.difficultyLevel}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: List.generate(5, (starIndex) {
@@ -273,6 +282,11 @@ class RecipeDetailPage extends StatelessWidget {
               'Time: ${recipe.time}',
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Difficulty: ${recipe.difficultyLevel}',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
             const SizedBox(height: 16),
             Text(
               recipe.description,
@@ -300,8 +314,9 @@ class _AddRecipePageState extends State<AddRecipePage> {
   String time = '';
   String description = '';
   int difficulty = 0;
+  String difficultyLevel = 'Medium';
 
-  String imagePath = 'assets/placeholder.jpg'; // Placeholder
+  String imagePath = 'assets/placeholder.jpg';
 
   @override
   Widget build(BuildContext context) {
@@ -327,7 +342,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 onSaved: (val) => description = val ?? '',
               ),
               const SizedBox(height: 12),
-              const Text("Difficulty:"),
+              const Text("Difficulty (user rating):"),
               Row(
                 children: List.generate(5, (index) {
                   return GestureDetector(
@@ -341,6 +356,22 @@ class _AddRecipePageState extends State<AddRecipePage> {
                   );
                 }),
               ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: difficultyLevel,
+                decoration: const InputDecoration(labelText: 'Difficulty Level'),
+                items: ['Easy', 'Medium', 'Hard'].map((level) {
+                  return DropdownMenuItem(
+                    value: level,
+                    child: Text(level),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    difficultyLevel = val ?? 'Medium';
+                  });
+                },
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -352,6 +383,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
                       time: time,
                       description: description,
                       difficulty: difficulty,
+                      difficultyLevel: difficultyLevel,
                     ),
                   );
                   Navigator.pop(context);
