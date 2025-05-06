@@ -43,6 +43,12 @@ class Recipe {
     this.difficulty = 0,
     this.difficultyLevel = 'Medium',
   });
+
+  int get preparationMinutes {
+    final regex = RegExp(r'(\d+)');
+    final match = regex.firstMatch(time);
+    return match != null ? int.parse(match.group(1)!) : 0;
+  }
 }
 
 class ImageScroller extends StatefulWidget {
@@ -80,6 +86,8 @@ class _ImageScrollerState extends State<ImageScroller> {
     ),
   ];
 
+  String sortBy = 'None';
+
   void updateDifficulty(int index, int newRating) {
     setState(() {
       recipes[index].difficulty = newRating;
@@ -110,12 +118,48 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  List<Recipe> get sortedRecipes {
+    List<Recipe> sorted = [...recipes];
+    switch (sortBy) {
+      case 'Difficulty':
+        sorted.sort((a, b) => a.difficultyLevel.compareTo(b.difficultyLevel));
+        break;
+      case 'Stars':
+        sorted.sort((a, b) => b.difficulty.compareTo(a.difficulty));
+        break;
+      case 'Time':
+        sorted.sort((a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
+        break;
+    }
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayRecipes = sortedRecipes;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Recipe Gallery"),
         actions: [
+          DropdownButton<String>(
+            value: sortBy,
+            underline: const SizedBox(),
+            items: ['None', 'Difficulty', 'Stars', 'Time']
+                .map((value) => DropdownMenuItem<String>(
+                      value: value,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text("Sort: $value"),
+                      ),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              setState(() {
+                sortBy = value!;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               MainApp.themeNotifier.value == ThemeMode.light
@@ -134,13 +178,13 @@ class _ImageScrollerState extends State<ImageScroller> {
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: SizedBox(
-          height: 260,
+          height: 280,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: recipes.length + 1,
+            itemCount: displayRecipes.length + 1,
             itemBuilder: (context, index) {
-              if (index < recipes.length) {
-                final recipe = recipes[index];
+              if (index < displayRecipes.length) {
+                final recipe = displayRecipes[index];
                 return Container(
                   width: 180,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -152,7 +196,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                recipes.removeAt(index);
+                                recipes.remove(recipe);
                               });
                             },
                             child: Container(
@@ -207,7 +251,8 @@ class _ImageScrollerState extends State<ImageScroller> {
                       Row(
                         children: List.generate(5, (starIndex) {
                           return GestureDetector(
-                            onTap: () => updateDifficulty(index, starIndex + 1),
+                            onTap: () => updateDifficulty(
+                                recipes.indexOf(recipe), starIndex + 1),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 2.0),
                               child: Icon(
@@ -235,8 +280,16 @@ class _ImageScrollerState extends State<ImageScroller> {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.add, size: 40, color: Colors.black54),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.add_circle_outline, size: 48, color: Colors.black45),
+                        SizedBox(height: 8),
+                        Text(
+                          "Add Recipe",
+                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                        ),
+                      ],
                     ),
                   ),
                 );
