@@ -7,11 +7,22 @@ void main() {
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
+  static final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.light);
+
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: ImageScroller(),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentMode, _) {
+        return MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: currentMode,
+          home: const ImageScroller(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }
@@ -100,7 +111,24 @@ class _ImageScrollerState extends State<ImageScroller> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Recipe Gallery")),
+      appBar: AppBar(
+        title: const Text("Recipe Gallery"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              MainApp.themeNotifier.value == ThemeMode.light
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
+            onPressed: () {
+              MainApp.themeNotifier.value =
+                  MainApp.themeNotifier.value == ThemeMode.light
+                      ? ThemeMode.dark
+                      : ThemeMode.light;
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: SizedBox(
