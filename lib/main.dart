@@ -117,17 +117,39 @@ class _ImageScrollerState extends State<ImageScroller> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: () => openDetailPage(recipe),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            recipe.imagePath,
-                            width: 180,
-                            height: 110,
-                            fit: BoxFit.cover,
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                recipes.removeAt(index);
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(Icons.remove, color: Colors.white, size: 16),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => openDetailPage(recipe),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.asset(
+                                  recipe.imagePath,
+                                  width: 140,
+                                  height: 110,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -148,11 +170,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                       Row(
                         children: List.generate(5, (starIndex) {
                           return GestureDetector(
-                            onTap: () =>
-                                updateDifficulty(index, starIndex + 1),
+                            onTap: () => updateDifficulty(index, starIndex + 1),
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 2.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 2.0),
                               child: Icon(
                                 starIndex < recipe.difficulty
                                     ? Icons.star
@@ -168,7 +188,6 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ),
                 );
               } else {
-                // + Button
                 return GestureDetector(
                   onTap: openAddRecipePage,
                   child: Container(
@@ -254,8 +273,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
   String description = '';
   int difficulty = 0;
 
-  // Fake image path for demonstration
-  String imagePath = 'assets/placeholder.jpg';
+  String imagePath = 'assets/placeholder.jpg'; // Placeholder
 
   @override
   Widget build(BuildContext context) {
