@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // To handle file images
 
 void main() {
   runApp(const MainApp());
@@ -214,12 +216,19 @@ class _ImageScrollerState extends State<ImageScroller> {
                               onTap: () => openDetailPage(recipe),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.asset(
-                                  recipe.imagePath,
-                                  width: 140,
-                                  height: 110,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: recipe.imagePath.startsWith('assets')
+                                    ? Image.asset(
+                                        recipe.imagePath,
+                                        width: 140,
+                                        height: 110,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.file(
+                                        File(recipe.imagePath),
+                                        width: 140,
+                                        height: 110,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                           ),
@@ -316,12 +325,19 @@ class RecipeDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              recipe.imagePath,
-              width: double.infinity,
-              height: 220,
-              fit: BoxFit.cover,
-            ),
+            recipe.imagePath.startsWith('assets')
+                ? Image.asset(
+                    recipe.imagePath,
+                    width: double.infinity,
+                    height: 220,
+                    fit: BoxFit.cover,
+                  )
+                : Image.file(
+                    File(recipe.imagePath),
+                    width: double.infinity,
+                    height: 220,
+                    fit: BoxFit.cover,
+                  ),
             const SizedBox(height: 16),
             Text(
               recipe.title,
@@ -362,14 +378,37 @@ class AddRecipePage extends StatefulWidget {
 }
 
 class _AddRecipePageState extends State<AddRecipePage> {
-  final _formKey = GlobalKey<FormState>();
-  String title = '';
-  String time = '';
-  String description = '';
-  int difficulty = 0;
-  String difficultyLevel = 'Medium';
+  final ImagePicker _picker = ImagePicker();
+  File? _imageFile;
 
-  String imagePath = 'assets/placeholder.jpg';
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  void _saveRecipe() {
+    final String title = _titleController.text;
+    final String time = _timeController.text;
+    final String description = _descriptionController.text;
+    if (_imageFile != null && title.isNotEmpty && time.isNotEmpty && description.isNotEmpty) {
+      final newRecipe = Recipe(
+        imagePath: _imageFile!.path,
+        title: title,
+        time: time,
+        description: description,
+      );
+      widget.onAdd(newRecipe);
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -377,74 +416,39 @@ class _AddRecipePageState extends State<AddRecipePage> {
       appBar: AppBar(title: const Text("Add New Recipe")),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Title'),
-                onSaved: (val) => title = val ?? '',
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Time (e.g. 20 min)'),
-                onSaved: (val) => time = val ?? '',
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 4,
-                onSaved: (val) => description = val ?? '',
-              ),
-              const SizedBox(height: 12),
-              const Text("Difficulty (user rating):"),
-              Row(
-                children: List.generate(5, (index) {
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      difficulty = index + 1;
-                    }),
-                    child: Icon(
-                      index < difficulty ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: difficultyLevel,
-                decoration: const InputDecoration(labelText: 'Difficulty Level'),
-                items: ['Easy', 'Medium', 'Hard'].map((level) {
-                  return DropdownMenuItem(
-                    value: level,
-                    child: Text(level),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    difficultyLevel = val ?? 'Medium';
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  _formKey.currentState?.save();
-                  widget.onAdd(
-                    Recipe(
-                      imagePath: imagePath,
-                      title: title,
-                      time: time,
-                      description: description,
-                      difficulty: difficulty,
-                      difficultyLevel: difficultyLevel,
-                    ),
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text("Add Recipe"),
-              )
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: _imageFile == null
+                  ? Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.add_a_photo, size: 40),
+                    )
+                  : Image.file(_imageFile!, width: 100, height: 100),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Recipe Title'),
+            ),
+            TextField(
+              controller: _timeController,
+              decoration: const InputDecoration(labelText: 'Time'),
+            ),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _saveRecipe,
+              child: const Text('Save Recipe'),
+            ),
+          ],
         ),
       ),
     );
