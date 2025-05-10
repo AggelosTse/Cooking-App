@@ -261,9 +261,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey),
                     ),
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.add_circle_outline, size: 48, color: Colors.black45),
                         SizedBox(height: 8),
                         Text(
