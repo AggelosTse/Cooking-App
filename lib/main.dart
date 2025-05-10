@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io'; // To handle file images
+import 'package:image_picker/image_picker.dart';
 
-void main() {
+import 'recipe.dart'; // Import the Recipe class
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final appDocDir = await getApplicationDocumentsDirectory();
+  Hive.init(appDocDir.path);
+  Hive.registerAdapter(RecipeAdapter());
+  await Hive.openBox<Recipe>('recipesBox');
+
   runApp(const MainApp());
 }
 
@@ -29,30 +39,6 @@ class MainApp extends StatelessWidget {
   }
 }
 
-class Recipe {
-  final String imagePath;
-  final String title;
-  final String time;
-  final String description;
-  int difficulty;
-  String difficultyLevel;
-
-  Recipe({
-    required this.imagePath,
-    required this.title,
-    required this.time,
-    required this.description,
-    this.difficulty = 0,
-    this.difficultyLevel = 'Medium',
-  });
-
-  int get preparationMinutes {
-    final regex = RegExp(r'(\d+)');
-    final match = regex.firstMatch(time);
-    return match != null ? int.parse(match.group(1)!) : 0;
-  }
-}
-
 class ImageScroller extends StatefulWidget {
   const ImageScroller({super.key});
 
@@ -61,38 +47,21 @@ class ImageScroller extends StatefulWidget {
 }
 
 class _ImageScrollerState extends State<ImageScroller> {
-  final List<Recipe> recipes = [
-    Recipe(
-      imagePath: 'assets/carbonara.jpg',
-      title: 'Carbonara',
-      time: '20 min',
-      difficulty: 3,
-      difficultyLevel: 'Medium',
-      description: 'Spaghetti alla Carbonara is a traditional Roman pasta dish...',
-    ),
-    Recipe(
-      imagePath: 'assets/pancakes.jpg',
-      title: 'Pancakes',
-      time: '15 min',
-      difficulty: 2,
-      difficultyLevel: 'Easy',
-      description: 'Pancakes are a classic North American breakfast food...',
-    ),
-    Recipe(
-      imagePath: 'assets/steak.jpg',
-      title: 'Steak',
-      time: '30 min',
-      difficulty: 4,
-      difficultyLevel: 'Hard',
-      description: 'Steak is a thick slice of beef typically grilled or pan-seared...',
-    ),
-  ];
-
+  late Box<Recipe> recipeBox;
+  List<Recipe> recipes = [];
   String sortBy = 'None';
+
+  @override
+  void initState() {
+    super.initState();
+    recipeBox = Hive.box<Recipe>('recipesBox');
+    recipes = recipeBox.values.toList();
+  }
 
   void updateDifficulty(int index, int newRating) {
     setState(() {
       recipes[index].difficulty = newRating;
+      recipeBox.putAt(index, recipes[index]);
     });
   }
 
@@ -108,6 +77,7 @@ class _ImageScrollerState extends State<ImageScroller> {
   void addNewRecipe(Recipe recipe) {
     setState(() {
       recipes.add(recipe);
+      recipeBox.add(recipe);
     });
   }
 
@@ -198,7 +168,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                recipes.remove(recipe);
+                                final index = recipes.indexOf(recipe);
+                                recipeBox.deleteAt(index);
+                                recipes.removeAt(index);
                               });
                             },
                             child: Container(
