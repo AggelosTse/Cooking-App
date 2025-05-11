@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -100,7 +101,8 @@ class _ImageScrollerState extends State<ImageScroller> {
         sorted.sort((a, b) => b.difficulty.compareTo(a.difficulty));
         break;
       case 'Time':
-        sorted.sort((a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
+        sorted.sort(
+            (a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
         break;
     }
     return sorted;
@@ -374,7 +376,8 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final TextEditingController _descriptionController = TextEditingController();
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
@@ -386,7 +389,11 @@ class _AddRecipePageState extends State<AddRecipePage> {
     final String title = _titleController.text;
     final String time = _timeController.text;
     final String description = _descriptionController.text;
-    if (_imageFile != null && title.isNotEmpty && time.isNotEmpty && description.isNotEmpty) {
+
+    if (_imageFile != null &&
+        title.isNotEmpty &&
+        time.isNotEmpty &&
+        description.isNotEmpty) {
       final newRecipe = Recipe(
         imagePath: _imageFile!.path,
         title: title,
@@ -437,8 +444,10 @@ class _AddRecipePageState extends State<AddRecipePage> {
             const SizedBox(height: 12),
             TextField(
               controller: _timeController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
-                labelText: 'Time',
+                labelText: 'Time (minutes)',
                 border: OutlineInputBorder(),
               ),
             ),
