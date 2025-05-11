@@ -116,24 +116,6 @@ class _ImageScrollerState extends State<ImageScroller> {
       appBar: AppBar(
         title: const Text("Recipe Gallery"),
         actions: [
-          DropdownButton<String>(
-            value: sortBy,
-            underline: const SizedBox(),
-            items: ['None', 'Difficulty', 'Stars', 'Time']
-                .map((value) => DropdownMenuItem<String>(
-                      value: value,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text("Sort: $value"),
-                      ),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                sortBy = value!;
-              });
-            },
-          ),
           IconButton(
             tooltip: 'Toggle Theme',
             icon: AnimatedSwitcher(
@@ -164,10 +146,31 @@ class _ImageScrollerState extends State<ImageScroller> {
       ),
       body: Center(
         child: SizedBox(
-          height: 280,
+          height: 320,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: Row(
+                  children: [
+                    const Text("Sort by: "),
+                    DropdownButton<String>(
+                      value: sortBy,
+                      items: ['None', 'Difficulty', 'Stars', 'Time']
+                          .map((value) => DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          sortBy = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -232,7 +235,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold)),
-                              Text('Time: ${recipe.time}',
+                              Text("Time: ${recipe.time}'",
                                   style: const TextStyle(
                                       fontSize: 14, color: Colors.grey)),
                               Text('Difficulty: ${recipe.difficultyLevel}',
@@ -338,7 +341,7 @@ class RecipeDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Time: ${recipe.time}',
+              "Time: ${recipe.time}'",
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 8),
@@ -475,4 +478,3 @@ class _AddRecipePageState extends State<AddRecipePage> {
     );
   }
 }
- 
