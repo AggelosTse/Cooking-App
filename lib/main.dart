@@ -17,6 +17,11 @@ void main() async {
   runApp(const MainApp());
 }
 
+// Global Settings class
+class Settings {
+  static String? backgroundImagePath;
+}
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -117,188 +122,188 @@ class _ImageScrollerState extends State<ImageScroller> {
         title: const Text("Recipe Gallery"),
         actions: [
           IconButton(
-            tooltip: 'Toggle Theme',
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) => RotationTransition(
-                turns: child.key == const ValueKey('light')
-                    ? Tween<double>(begin: 1, end: 0.75).animate(animation)
-                    : Tween<double>(begin: 0.75, end: 1).animate(animation),
-                child: child,
-              ),
-              child: Icon(
-                MainApp.themeNotifier.value == ThemeMode.light
-                    ? Icons.dark_mode
-                    : Icons.light_mode,
-                key: ValueKey(MainApp.themeNotifier.value == ThemeMode.light
-                    ? 'dark'
-                    : 'light'),
-              ),
-            ),
-            onPressed: () {
-              MainApp.themeNotifier.value =
-                  MainApp.themeNotifier.value == ThemeMode.light
-                      ? ThemeMode.dark
-                      : ThemeMode.light;
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+              setState(() {}); // Refresh background/theme
             },
           ),
         ],
       ),
-      body: Center(
-        child: SizedBox(
-          height: 320,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                child: Row(
-                  children: [
-                    const Text("Sort by: "),
-                    DropdownButton<String>(
-                      value: sortBy,
-                      items: ['None', 'Difficulty', 'Stars', 'Time']
-                          .map((value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          sortBy = value!;
-                        });
-                      },
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (Settings.backgroundImagePath != null)
+            Image.file(
+              File(Settings.backgroundImagePath!),
+              fit: BoxFit.cover,
+            ),
+          // ignore: deprecated_member_use
+          Container(color: Colors.black.withOpacity(0.3)), // Optional overlay
+          Center(
+            child: SizedBox(
+              height: 320,
+              child: Column(
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        const Text("Sort by: "),
+                        DropdownButton<String>(
+                          value: sortBy,
+                          items: ['None', 'Difficulty', 'Stars', 'Time']
+                              .map((value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              sortBy = value!;
+                            });
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: true,
-                  itemCount: displayRecipes.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index < displayRecipes.length) {
-                      final recipe = displayRecipes[index];
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: displayRecipes.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index < displayRecipes.length) {
+                          final recipe = displayRecipes[index];
+                          return Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: recipe.imagePath.startsWith('assets')
-                                        ? Image.asset(recipe.imagePath,
-                                            width: 160,
-                                            height: 100,
-                                            fit: BoxFit.cover)
-                                        : Image.file(File(recipe.imagePath),
-                                            width: 160,
-                                            height: 100,
-                                            fit: BoxFit.cover),
-                                  ),
-                                  Positioned(
-                                    top: 4,
-                                    right: 4,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          final idx = recipes.indexOf(recipe);
-                                          recipeBox.deleteAt(idx);
-                                          recipes.removeAt(idx);
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.redAccent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Icons.close,
-                                            size: 16, color: Colors.white),
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: recipe.imagePath
+                                                .startsWith('assets')
+                                            ? Image.asset(recipe.imagePath,
+                                                width: 160,
+                                                height: 100,
+                                                fit: BoxFit.cover)
+                                            : Image.file(File(recipe.imagePath),
+                                                width: 160,
+                                                height: 100,
+                                                fit: BoxFit.cover),
                                       ),
-                                    ),
-                                  )
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              final idx =
+                                                  recipes.indexOf(recipe);
+                                              recipeBox.deleteAt(idx);
+                                              recipes.removeAt(idx);
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.redAccent,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.close,
+                                                size: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(recipe.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                  Text("Time: ${recipe.time}'",
+                                      style: const TextStyle(
+                                          fontSize: 14, color: Colors.grey)),
+                                  Text('Difficulty: ${recipe.difficultyLevel}',
+                                      style: const TextStyle(
+                                          fontSize: 14, color: Colors.grey)),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: List.generate(5, (starIndex) {
+                                      return GestureDetector(
+                                        onTap: () => updateDifficulty(
+                                            recipes.indexOf(recipe),
+                                            starIndex + 1),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 2.0),
+                                          child: Icon(
+                                            starIndex < recipe.difficulty
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: Colors.amber,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(recipe.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold)),
-                              Text("Time: ${recipe.time}'",
-                                  style: const TextStyle(
-                                      fontSize: 14, color: Colors.grey)),
-                              Text('Difficulty: ${recipe.difficultyLevel}',
-                                  style: const TextStyle(
-                                      fontSize: 14, color: Colors.grey)),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: List.generate(5, (starIndex) {
-                                  return GestureDetector(
-                                    onTap: () => updateDifficulty(
-                                        recipes.indexOf(recipe),
-                                        starIndex + 1),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 2.0),
-                                      child: Icon(
-                                        starIndex < recipe.difficulty
-                                            ? Icons.star
-                                            : Icons.star_border,
-                                        color: Colors.amber,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  );
-                                }),
+                            ),
+                          );
+                        } else {
+                          return GestureDetector(
+                            onTap: openAddRecipePage,
+                            child: Container(
+                              width: 180,
+                              height: 190,
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.grey),
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    } else {
-                      return GestureDetector(
-                        onTap: openAddRecipePage,
-                        child: Container(
-                          width: 180,
-                          height: 190,
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_circle_outline,
-                                  size: 44, color: Colors.black45),
-                              SizedBox(height: 6),
-                              Text("Add Recipe",
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.black54)),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_circle_outline,
+                                      size: 44, color: Colors.black45),
+                                  SizedBox(height: 6),
+                                  Text("Add Recipe",
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.black54)),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -472,6 +477,68 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 label: const Text('Save Recipe'),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedBackground;
+
+  Future<void> _pickBackgroundImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      setState(() {
+        _selectedBackground = file;
+        Settings.backgroundImagePath = file.path;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = MainApp.themeNotifier.value == ThemeMode.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Settings")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            SwitchListTile(
+              title: const Text("Dark Mode"),
+              value: isDark,
+              onChanged: (value) {
+                MainApp.themeNotifier.value =
+                    value ? ThemeMode.dark : ThemeMode.light;
+                setState(() {});
+              },
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text("Select Background Image"),
+              onTap: _pickBackgroundImage,
+              subtitle: Settings.backgroundImagePath != null
+                  ? const Text("Image selected")
+                  : const Text("No image selected"),
+            ),
+            if (_selectedBackground != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Image.file(_selectedBackground!, height: 100),
+              ),
           ],
         ),
       ),
