@@ -130,7 +130,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                   builder: (context) => const SettingsPage(),
                 ),
               );
-              setState(() {}); // Refresh background/theme
+              setState(() {});
             },
           ),
         ],
@@ -144,7 +144,7 @@ class _ImageScrollerState extends State<ImageScroller> {
               fit: BoxFit.cover,
             ),
           // ignore: deprecated_member_use
-          Container(color: Colors.black.withOpacity(0.3)), // Optional overlay
+          Container(color: Colors.black.withOpacity(0.3)),
           Center(
             child: SizedBox(
               height: 320,
@@ -176,11 +176,12 @@ class _ImageScrollerState extends State<ImageScroller> {
                   Expanded(
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: displayRecipes.length + 1,
+                      itemCount: displayRecipes.length,
                       itemBuilder: (context, index) {
-                        if (index < displayRecipes.length) {
-                          final recipe = displayRecipes[index];
-                          return Card(
+                        final recipe = displayRecipes[index];
+                        return GestureDetector(
+                          onTap: () => openDetailPage(recipe),
+                          child: Card(
                             elevation: 4,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -268,34 +269,8 @@ class _ImageScrollerState extends State<ImageScroller> {
                                 ],
                               ),
                             ),
-                          );
-                        } else {
-                          return GestureDetector(
-                            onTap: openAddRecipePage,
-                            child: Container(
-                              width: 180,
-                              height: 190,
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.grey),
-                              ),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_circle_outline,
-                                      size: 44, color: Colors.black45),
-                                  SizedBox(height: 6),
-                                  Text("Add Recipe",
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.black54)),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -304,6 +279,11 @@ class _ImageScrollerState extends State<ImageScroller> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: openAddRecipePage,
+        mini: true,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -496,7 +476,8 @@ class _SettingsPageState extends State<SettingsPage> {
   File? _selectedBackground;
 
   Future<void> _pickBackgroundImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       setState(() {
