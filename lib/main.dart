@@ -11,21 +11,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final appDocDir = await getApplicationDocumentsDirectory();
   Hive.init(appDocDir.path);
-  Hive.registerAdapter(RecipeAdapter());
-  await Hive.openBox<Recipe>('recipesBox');
+  Hive.registerAdapter(RecipeAdapter()); // registering hive adapter for the recipes
+  await Hive.openBox<Recipe>('recipesBox'); // opening hive box
 
   runApp(const MainApp());
 }
 
+// hold settings like background image path
 class Settings {
   static String? backgroundImagePath;
 }
 
+// main widget for the app with light/dark theme support
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   static final ValueNotifier<ThemeMode> themeNotifier =
-      ValueNotifier(ThemeMode.light);
+      ValueNotifier(ThemeMode.light); // theme state notifier
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +46,7 @@ class MainApp extends StatelessWidget {
   }
 }
 
+// main screen that displays the recipe list
 class ImageScroller extends StatefulWidget {
   const ImageScroller({super.key});
 
@@ -64,6 +67,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     recipeBox = Hive.box<Recipe>('recipesBox');
     recipes = recipeBox.values.toList();
 
+    // update search as the user types
     _searchController.addListener(() {
       setState(() {
         searchQuery = _searchController.text.toLowerCase();
@@ -71,6 +75,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // update difficulty rating (with stars)
   void updateDifficulty(int index, int newRating) {
     setState(() {
       recipes[index].difficulty = newRating;
@@ -78,6 +83,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // open detailed recipe secondary page
   void openDetailPage(Recipe recipe) {
     Navigator.push(
       context,
@@ -87,6 +93,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  // add a new recipe to the list and save it with hive
   void addNewRecipe(Recipe recipe) {
     setState(() {
       recipes.add(recipe);
@@ -94,6 +101,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // go to the add recipe screen
   void openAddRecipePage() {
     Navigator.push(
       context,
@@ -103,6 +111,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  // filter and sort the recipe list based on search and sort choises
   List<Recipe> get filteredRecipes {
     List<Recipe> filtered = [...recipes];
     if (searchQuery.isNotEmpty) {
@@ -137,6 +146,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       appBar: AppBar(
         title: const Text("Recipe Gallery"),
         actions: [
+          // go to settings page
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
@@ -154,17 +164,18 @@ class _ImageScrollerState extends State<ImageScroller> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // background image if selected in settings
           if (Settings.backgroundImagePath != null)
             Image.file(
               File(Settings.backgroundImagePath!),
               fit: BoxFit.cover,
             ),
-          Container(color: Colors.black.withOpacity(0.3)),
+          Container(color: Colors.black.withOpacity(0.3)), // Overlay for readability
           Column(
             children: [
+              // search bar
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -178,9 +189,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ),
                 ),
               ),
+              // dropdown for sorting
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     const Text("Sort by: "),
@@ -201,9 +212,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ],
                 ),
               ),
-              // Changed here: replaced Expanded with SizedBox for smaller height
+              // list of recipes
               SizedBox(
-                height: 200, // Smaller fixed height instead of Expanded
+                height: 200,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: displayRecipes.length,
@@ -215,29 +226,25 @@ class _ImageScrollerState extends State<ImageScroller> {
                         elevation: 4,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 6),
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         child: SizedBox(
                           width: 140,
-                          height: 190, // fixed height for the card inside
+                          height: 190,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // recipe image with delete button
                                 Stack(
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: recipe.imagePath.startsWith('assets')
                                           ? Image.asset(recipe.imagePath,
-                                              width: 130,
-                                              height: 80,
-                                              fit: BoxFit.cover)
+                                              width: 130, height: 80, fit: BoxFit.cover)
                                           : Image.file(File(recipe.imagePath),
-                                              width: 130,
-                                              height: 80,
-                                              fit: BoxFit.cover),
+                                              width: 130, height: 80, fit: BoxFit.cover),
                                     ),
                                     Positioned(
                                       top: 4,
@@ -264,28 +271,26 @@ class _ImageScrollerState extends State<ImageScroller> {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
+                                // recipe title and info
                                 Text(recipe.title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold)),
+                                        fontSize: 14, fontWeight: FontWeight.bold)),
                                 Text("Time: ${recipe.time}'",
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 Text('Difficulty: ${recipe.difficultyLevel}',
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 const SizedBox(height: 4),
+                                // star rating
                                 Row(
                                   children: List.generate(5, (starIndex) {
                                     return GestureDetector(
                                       onTap: () => updateDifficulty(
-                                          recipes.indexOf(recipe),
-                                          starIndex + 1),
+                                          recipes.indexOf(recipe), starIndex + 1),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 1.5),
+                                        padding:
+                                            const EdgeInsets.symmetric(horizontal: 1.5),
                                         child: Icon(
                                           starIndex < recipe.difficulty
                                               ? Icons.star
@@ -310,6 +315,7 @@ class _ImageScrollerState extends State<ImageScroller> {
           ),
         ],
       ),
+      // button to add a new recipe
       floatingActionButton: SizedBox(
         width: 64,
         height: 64,
@@ -322,6 +328,7 @@ class _ImageScrollerState extends State<ImageScroller> {
   }
 }
 
+// display full details of a selected recipe
 class RecipeDetailPage extends StatelessWidget {
   final Recipe recipe;
 
@@ -336,42 +343,23 @@ class RecipeDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // recipe image
             recipe.imagePath.startsWith('assets')
-                ? Image.asset(
-                    recipe.imagePath,
-                    width: double.infinity,
-                    height: 220,
-                    fit: BoxFit.cover,
-                  )
-                : Image.file(
-                    File(recipe.imagePath),
-                    width: double.infinity,
-                    height: 220,
-                    fit: BoxFit.cover,
-                  ),
+                ? Image.asset(recipe.imagePath,
+                    width: double.infinity, height: 220, fit: BoxFit.cover)
+                : Image.file(File(recipe.imagePath),
+                    width: double.infinity, height: 220, fit: BoxFit.cover),
             const SizedBox(height: 16),
-            Text(
-              recipe.title,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(recipe.title,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(
-              "Time: ${recipe.time}'",
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+            Text("Time: ${recipe.time}'",
+                style: const TextStyle(fontSize: 16, color: Colors.grey)),
             const SizedBox(height: 8),
-            Text(
-              'Difficulty: ${recipe.difficultyLevel}',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+            Text('Difficulty: ${recipe.difficultyLevel}',
+                style: const TextStyle(fontSize: 16, color: Colors.grey)),
             const SizedBox(height: 16),
-            Text(
-              recipe.description,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(recipe.description, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -379,6 +367,7 @@ class RecipeDetailPage extends StatelessWidget {
   }
 }
 
+// page for adding a new recipe
 class AddRecipePage extends StatefulWidget {
   final Function(Recipe) onAdd;
 
@@ -398,6 +387,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
 
   String _selectedDifficulty = 'Easy';
 
+  // pick image from gallery
   Future<void> _pickImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -408,6 +398,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     }
   }
 
+  // save new recipe
   void _saveRecipe() {
     final String title = _titleController.text;
     final String time = _timeController.text;
@@ -439,6 +430,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // image picker
             Center(
               child: GestureDetector(
                 onTap: _pickImage,
@@ -459,6 +451,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               ),
             ),
             const SizedBox(height: 20),
+            // Form fields
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -520,6 +513,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
   }
 }
 
+// settings page for theme and background
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -531,6 +525,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final ImagePicker _picker = ImagePicker();
   File? _selectedBackground;
 
+  // user can pick background image
   Future<void> _pickBackgroundImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -553,6 +548,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            // theme toggle
             ListTile(
               title: const Text('Toggle Theme'),
               trailing: Switch(
@@ -565,6 +561,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 20),
+            // background image picker
             ElevatedButton(
               onPressed: _pickBackgroundImage,
               child: const Text('Change Background Image'),
