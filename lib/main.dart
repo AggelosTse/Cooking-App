@@ -1,5 +1,3 @@
-// [START OF FILE]
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -389,6 +387,8 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  String _selectedDifficulty = 'Easy';
+
   Future<void> _pickImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -413,6 +413,8 @@ class _AddRecipePageState extends State<AddRecipePage> {
         title: title,
         time: time,
         description: description,
+        difficultyLevel: _selectedDifficulty,
+        difficulty: 0,
       );
       widget.onAdd(newRecipe);
       Navigator.pop(context);
@@ -473,6 +475,25 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 labelText: 'Description',
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedDifficulty,
+              decoration: const InputDecoration(
+                labelText: 'Difficulty Level',
+                border: OutlineInputBorder(),
+              ),
+              items: ['Easy', 'Medium', 'Hard']
+                  .map((label) => DropdownMenuItem(
+                        value: label,
+                        child: Text(label),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedDifficulty = value!;
+                });
+              },
             ),
             const SizedBox(height: 20),
             SizedBox(
