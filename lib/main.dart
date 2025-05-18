@@ -201,7 +201,9 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ],
                 ),
               ),
-              Expanded(
+              // Changed here: replaced Expanded with SizedBox for smaller height
+              SizedBox(
+                height: 200, // Smaller fixed height instead of Expanded
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: displayRecipes.length,
@@ -217,6 +219,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                             horizontal: 8, vertical: 6),
                         child: SizedBox(
                           width: 140,
+                          height: 190, // fixed height for the card inside
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -545,34 +548,31 @@ class _SettingsPageState extends State<SettingsPage> {
     final isDark = MainApp.themeNotifier.value == ThemeMode.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Settings")),
+      appBar: AppBar(title: const Text('Settings')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
           children: [
-            SwitchListTile(
-              title: const Text("Dark Mode"),
-              value: isDark,
-              onChanged: (value) {
-                MainApp.themeNotifier.value =
-                    value ? ThemeMode.dark : ThemeMode.light;
-                setState(() {});
-              },
+            ListTile(
+              title: const Text('Toggle Theme'),
+              trailing: Switch(
+                value: isDark,
+                onChanged: (value) {
+                  MainApp.themeNotifier.value =
+                      value ? ThemeMode.dark : ThemeMode.light;
+                  setState(() {});
+                },
+              ),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text("Select Background Image"),
-              onTap: _pickBackgroundImage,
-              subtitle: Settings.backgroundImagePath != null
-                  ? const Text("Image selected")
-                  : const Text("No image selected"),
+            ElevatedButton(
+              onPressed: _pickBackgroundImage,
+              child: const Text('Change Background Image'),
             ),
-            if (_selectedBackground != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Image.file(_selectedBackground!, height: 100),
-              ),
+            if (_selectedBackground != null) ...[
+              const SizedBox(height: 10),
+              Image.file(_selectedBackground!, height: 150),
+            ],
           ],
         ),
       ),
