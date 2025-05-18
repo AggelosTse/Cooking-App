@@ -1,3 +1,5 @@
+// [START OF FILE]
+
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,7 +19,6 @@ void main() async {
   runApp(const MainApp());
 }
 
-// Global Settings class
 class Settings {
   static String? backgroundImagePath;
 }
@@ -57,12 +58,19 @@ class _ImageScrollerState extends State<ImageScroller> {
   List<Recipe> recipes = [];
   String sortBy = 'None';
   String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     recipeBox = Hive.box<Recipe>('recipesBox');
     recipes = recipeBox.values.toList();
+
+    _searchController.addListener(() {
+      setState(() {
+        searchQuery = _searchController.text.toLowerCase();
+      });
+    });
   }
 
   void updateDifficulty(int index, int newRating) {
@@ -98,36 +106,34 @@ class _ImageScrollerState extends State<ImageScroller> {
   }
 
   List<Recipe> get filteredRecipes {
-    if (searchQuery.isEmpty) {
-      return recipes;
-    } else {
-      return recipes
-          .where((r) =>
-              r.title.toLowerCase().contains(searchQuery.toLowerCase().trim()))
+    List<Recipe> filtered = [...recipes];
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered
+          .where((recipe) =>
+              recipe.title.toLowerCase().contains(searchQuery) ||
+              recipe.description.toLowerCase().contains(searchQuery))
           .toList();
     }
-  }
 
-  List<Recipe> get sortedRecipes {
-    List<Recipe> sorted = [...filteredRecipes];
     switch (sortBy) {
       case 'Difficulty':
-        sorted.sort((a, b) => a.difficultyLevel.compareTo(b.difficultyLevel));
+        filtered.sort((a, b) => a.difficultyLevel.compareTo(b.difficultyLevel));
         break;
       case 'Stars':
-        sorted.sort((a, b) => b.difficulty.compareTo(a.difficulty));
+        filtered.sort((a, b) => b.difficulty.compareTo(a.difficulty));
         break;
       case 'Time':
-        sorted.sort(
+        filtered.sort(
             (a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
         break;
     }
-    return sorted;
+
+    return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
-    final displayRecipes = sortedRecipes;
+    final displayRecipes = filteredRecipes;
 
     return Scaffold(
       appBar: AppBar(
@@ -157,171 +163,146 @@ class _ImageScrollerState extends State<ImageScroller> {
             ),
           // ignore: deprecated_member_use
           Container(color: Colors.black.withOpacity(0.3)),
-          Center(
-            child: SizedBox(
-              height: 380,
-              child: Column(
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Search recipes...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white70,
-                      ),
+          Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search recipes...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.white70,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Text("Sort by: "),
+                    DropdownButton<String>(
+                      value: sortBy,
+                      items: ['None', 'Difficulty', 'Stars', 'Time']
+                          .map((value) => DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              ))
+                          .toList(),
                       onChanged: (value) {
                         setState(() {
-                          searchQuery = value;
+                          sortBy = value!;
                         });
                       },
                     ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: Row(
-                      children: [
-                        const Text("Sort by: "),
-                        DropdownButton<String>(
-                          value: sortBy,
-                          items: ['None', 'Difficulty', 'Stars', 'Time']
-                              .map((value) => DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  ))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              sortBy = value!;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: displayRecipes.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No recipes found',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 18),
-                            ),
-                          )
-                        : ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: displayRecipes.length,
-                            itemBuilder: (context, index) {
-                              final recipe = displayRecipes[index];
-                              return GestureDetector(
-                                onTap: () => openDetailPage(recipe),
-                                child: Card(
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Stack(
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: recipe.imagePath
-                                                      .startsWith('assets')
-                                                  ? Image.asset(recipe.imagePath,
-                                                      width: 160,
-                                                      height: 100,
-                                                      fit: BoxFit.cover)
-                                                  : Image.file(
-                                                      File(recipe.imagePath),
-                                                      width: 160,
-                                                      height: 100,
-                                                      fit: BoxFit.cover),
-                                            ),
-                                            Positioned(
-                                              top: 4,
-                                              right: 4,
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    final idx =
-                                                        recipes.indexOf(recipe);
-                                                    recipeBox.deleteAt(idx);
-                                                    recipes.removeAt(idx);
-                                                  });
-                                                },
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(4),
-                                                  decoration: const BoxDecoration(
-                                                    color: Colors.redAccent,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(Icons.close,
-                                                      size: 16,
-                                                      color: Colors.white),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(recipe.title,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold)),
-                                        Text("Time: ${recipe.time}'",
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey)),
-                                        Text('Difficulty: ${recipe.difficultyLevel}',
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey)),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: List.generate(5, (starIndex) {
-                                            return GestureDetector(
-                                              onTap: () => updateDifficulty(
-                                                  recipes.indexOf(recipe),
-                                                  starIndex + 1),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 2.0),
-                                                child: Icon(
-                                                  starIndex < recipe.difficulty
-                                                      ? Icons.star
-                                                      : Icons.star_border,
-                                                  color: Colors.amber,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              Expanded(
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: displayRecipes.length,
+                  itemBuilder: (context, index) {
+                    final recipe = displayRecipes[index];
+                    return GestureDetector(
+                      onTap: () => openDetailPage(recipe),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: recipe.imagePath.startsWith('assets')
+                                        ? Image.asset(recipe.imagePath,
+                                            width: 160,
+                                            height: 100,
+                                            fit: BoxFit.cover)
+                                        : Image.file(File(recipe.imagePath),
+                                            width: 160,
+                                            height: 100,
+                                            fit: BoxFit.cover),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          final idx = recipes.indexOf(recipe);
+                                          recipeBox.deleteAt(idx);
+                                          recipes.removeAt(idx);
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.redAccent,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.close,
+                                            size: 16, color: Colors.white),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(recipe.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                              Text("Time: ${recipe.time}'",
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey)),
+                              Text('Difficulty: ${recipe.difficultyLevel}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: List.generate(5, (starIndex) {
+                                  return GestureDetector(
+                                    onTap: () => updateDifficulty(
+                                        recipes.indexOf(recipe), starIndex + 1),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 2.0),
+                                      child: Icon(
+                                        starIndex < recipe.difficulty
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: Colors.amber,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
