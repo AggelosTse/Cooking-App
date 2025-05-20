@@ -23,8 +23,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/carbonara.jpg
-    - assets/pancakes.jpg
-    - assets/steak.jpg
