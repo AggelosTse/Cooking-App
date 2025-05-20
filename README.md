@@ -15,7 +15,7 @@ Clone the repository and run the app:
 
   
   1) git clone https://github.com/AggelosTse/Cooking-App.git
-  2) cd cookingapp
+  2) cd Cooking-App
   3) flutter pub get
   4) flutter run
 
