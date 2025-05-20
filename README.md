@@ -14,10 +14,10 @@ Chefly is a simple Flutter app built with Dart for managing your favorite recipe
 Clone the repository and run the app:
 
   
-  **1) git clone https://github.com/AggelosTse/Cooking-App.git**
-  **2) cd cookingapp**
-  **3) flutter pub get**
-  **4) flutter run**
+  **1) git clone https://github.com/AggelosTse/Cooking-App.git**.
+  **2) cd cookingapp**.
+  **3) flutter pub get**.
+  **4) flutter run**.
 
 
 Or download the apk file named "chefly"
