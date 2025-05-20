@@ -21,7 +21,7 @@ class RecipeAdapter extends TypeAdapter<Recipe> {
       title: fields[1] as String,
       time: fields[2] as String,
       description: fields[3] as String,
-      difficulty: fields[4] as int,
+      rating: fields[4] as int,
       difficultyLevel: fields[5] as String,
     );
   }
@@ -39,7 +39,7 @@ class RecipeAdapter extends TypeAdapter<Recipe> {
       ..writeByte(3)
       ..write(obj.description)
       ..writeByte(4)
-      ..write(obj.difficulty)
+      ..write(obj.rating)
       ..writeByte(5)
       ..write(obj.difficultyLevel);
   }
