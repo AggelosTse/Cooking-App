@@ -5,25 +5,37 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
+// import recipe.dart module
 import 'recipe.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // initializing Hive for image storage
   final appDocDir = await getApplicationDocumentsDirectory();
   Hive.init(appDocDir.path);
+
+  // registering the Hive adapter for the Recipe model
   Hive.registerAdapter(RecipeAdapter());
+
+  // Opening the Hive box to store Recipe objects
   await Hive.openBox<Recipe>('recipesBox');
 
+  // Running the app
   runApp(const MainApp());
 }
 
+// A class to store global settings like background image path
 class Settings {
   static String? backgroundImagePath;
 }
 
+// Main widget that sets up theme and root widget
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
+  // A notifier to toggle between light and dark mode
   static final ValueNotifier<ThemeMode> themeNotifier =
       ValueNotifier(ThemeMode.light);
 
@@ -35,7 +47,7 @@ class MainApp extends StatelessWidget {
         return MaterialApp(
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
-          themeMode: currentMode,
+          themeMode: currentMode, // Use theme mode from notifier
           home: const ImageScroller(),
           debugShowCheckedModeBanner: false,
         );
@@ -44,6 +56,7 @@ class MainApp extends StatelessWidget {
   }
 }
 
+// Main screen widget that displays list of recipes
 class ImageScroller extends StatefulWidget {
   const ImageScroller({super.key});
 
@@ -52,18 +65,19 @@ class ImageScroller extends StatefulWidget {
 }
 
 class _ImageScrollerState extends State<ImageScroller> {
-  late Box<Recipe> recipeBox;
-  List<Recipe> recipes = [];
-  String sortBy = 'None';
-  String searchQuery = '';
+  late Box<Recipe> recipeBox; // Hive box
+  List<Recipe> recipes = []; // List of all recipes
+  String sortBy = 'None'; // Sorting option
+  String searchQuery = ''; // Search query text
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     recipeBox = Hive.box<Recipe>('recipesBox');
-    recipes = recipeBox.values.toList();
+    recipes = recipeBox.values.toList(); // Load saved recipes
 
+    // Update searchQuery when user types
     _searchController.addListener(() {
       setState(() {
         searchQuery = _searchController.text.toLowerCase();
@@ -71,6 +85,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // Update star rating
   void updateRating(int index, int newRating) {
     setState(() {
       recipes[index].rating = newRating;
@@ -78,6 +93,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // Open recipe details page
   void openDetailPage(Recipe recipe) {
     Navigator.push(
       context,
@@ -87,6 +103,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  // Add new recipe to list and Hive box
   void addNewRecipe(Recipe recipe) {
     setState(() {
       recipes.add(recipe);
@@ -94,6 +111,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     });
   }
 
+  // Navigate to AddRecipePage
   void openAddRecipePage() {
     Navigator.push(
       context,
@@ -103,6 +121,7 @@ class _ImageScrollerState extends State<ImageScroller> {
     );
   }
 
+  // Filter and sort recipes based on search and selected sort option
   List<Recipe> get filteredRecipes {
     List<Recipe> filtered = [...recipes];
     if (searchQuery.isNotEmpty) {
@@ -121,8 +140,7 @@ class _ImageScrollerState extends State<ImageScroller> {
         filtered.sort((a, b) => b.rating.compareTo(a.rating));
         break;
       case 'Time':
-        filtered.sort(
-            (a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
+        filtered.sort((a, b) => a.preparationMinutes.compareTo(b.preparationMinutes));
         break;
     }
 
@@ -137,6 +155,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       appBar: AppBar(
         title: const Text("Recipe Gallery"),
         actions: [
+          // Settings button in AppBar
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
@@ -154,6 +173,7 @@ class _ImageScrollerState extends State<ImageScroller> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // Show background image if selected
           if (Settings.backgroundImagePath != null)
             Image.file(
               File(Settings.backgroundImagePath!),
@@ -162,6 +182,7 @@ class _ImageScrollerState extends State<ImageScroller> {
           Container(color: Colors.black.withOpacity(0.3)),
           Column(
             children: [
+              // Search bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
@@ -177,6 +198,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ),
                 ),
               ),
+              // Sort dropdown
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -199,6 +221,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                   ],
                 ),
               ),
+              // Horizontal scroll list of recipe cards
               SizedBox(
                 height: 200,
                 child: ListView.builder(
@@ -221,6 +244,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Recipe image and delete button
                                 Stack(
                                   children: [
                                     ClipRRect(
@@ -266,6 +290,7 @@ class _ImageScrollerState extends State<ImageScroller> {
                                 Text('Difficulty: ${recipe.difficultyLevel}',
                                     style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                 const SizedBox(height: 4),
+                                // Star rating
                                 Row(
                                   children: List.generate(5, (starIndex) {
                                     return GestureDetector(
@@ -298,6 +323,7 @@ class _ImageScrollerState extends State<ImageScroller> {
           ),
         ],
       ),
+      // Floating button to add a new recipe
       floatingActionButton: SizedBox(
         width: 64,
         height: 64,
@@ -310,6 +336,7 @@ class _ImageScrollerState extends State<ImageScroller> {
   }
 }
 
+// Detail page to view full recipe info
 class RecipeDetailPage extends StatelessWidget {
   final Recipe recipe;
 
@@ -347,6 +374,7 @@ class RecipeDetailPage extends StatelessWidget {
   }
 }
 
+// Page to add a new recipe
 class AddRecipePage extends StatefulWidget {
   final Function(Recipe) onAdd;
 
@@ -366,6 +394,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
 
   String _selectedDifficulty = 'Easy';
 
+  // Select image from gallery
   Future<void> _pickImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -376,6 +405,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     }
   }
 
+  // Save the new recipe
   void _saveRecipe() {
     final String title = _titleController.text;
     final String time = _timeController.text;
@@ -407,6 +437,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Image picker button
             Center(
               child: GestureDetector(
                 onTap: _pickImage,
@@ -427,6 +458,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               ),
             ),
             const SizedBox(height: 20),
+            // Title input
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -435,6 +467,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               ),
             ),
             const SizedBox(height: 12),
+            // Time input
             TextField(
               controller: _timeController,
               keyboardType: TextInputType.number,
@@ -445,6 +478,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               ),
             ),
             const SizedBox(height: 12),
+            // Description input
             TextField(
               controller: _descriptionController,
               maxLines: 3,
@@ -454,6 +488,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               ),
             ),
             const SizedBox(height: 12),
+            // Difficulty dropdown
             DropdownButtonFormField<String>(
               value: _selectedDifficulty,
               decoration: const InputDecoration(
@@ -473,6 +508,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
               },
             ),
             const SizedBox(height: 20),
+            // Save button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -488,6 +524,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
   }
 }
 
+// Settings screen for theme and background customization
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -499,6 +536,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final ImagePicker _picker = ImagePicker();
   File? _selectedBackground;
 
+  // Pick background image
   Future<void> _pickBackgroundImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
@@ -521,6 +559,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            // Theme switch
             ListTile(
               title: const Text('Toggle Theme'),
               trailing: Switch(
@@ -533,6 +572,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 20),
+            // Change background button
             ElevatedButton(
               onPressed: _pickBackgroundImage,
               child: const Text('Change Background Image'),
